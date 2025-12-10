@@ -1,6 +1,6 @@
 class Question < ApplicationRecord
-  belongs_to :quizze
-has_many :options, dependent: :destroy
+  belongs_to :quizze, class_name: 'Quizze', foreign_key: 'quiz_id', inverse_of: :questions
+  has_many :options, dependent: :destroy
 
   accepts_nested_attributes_for :options, allow_destroy: true
 
@@ -12,7 +12,6 @@ has_many :options, dependent: :destroy
     ["created_at", "id", "prompt", "question_type", "quiz_id", "updated_at"]
   end
 
-  # Allow searchable associations (optional)
   def self.ransackable_associations(auth_object = nil)
     ["quiz", "options"]
   end

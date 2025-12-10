@@ -1,39 +1,83 @@
-# app/controllers/api/attempts_controller.rb
 module Api
   class AttemptsController < ApplicationController
-    protect_from_forgery with: :null_session
-      def create
-        quiz = Quiz.find(attempt_params[:quiz_id])
-        attempt = quiz.attempts.create(taker_name: attempt_params[:taker_name])
-        score = 0
-        attempt_params[:answers].each do |ans|
-          q = Question.find(ans[:question_id])
-            if q.mcq? || q.true_false?
-            selected_option = q.options.find_by(id: ans[:option_id])
-            correct = selected_option&.correct
-            attempt.attempt_answers.create(question: q, option: selected_option,
-            correct: !!correct)
-            score += 1 if correct
-            else
-            attempt.attempt_answers.create(question: q, text_answer:
-            ans[:text_answer], correct: nil)
+    def create
+      quiz = Quizze.find(params[:quiz_id])
+      attempt = Attempt.create!(quizze: quiz, taker_name: params[:taker_name])
+
+      answers = params[:answers] || []
+      score = 0
+      incorrect = []
+
+      answers.each do |a|
+        q = Question.find_by(id: a[:question_id])
+        next unless q
+
+        aa = attempt.attempt_answers.build(question: q)
+
+        case q.question_type.to_s
+        when 'mcq', 'true_false'
+          if a[:option_id].present?
+            opt = q.options.find_by(id: a[:option_id])
+            aa.option = opt
+            aa.correct = opt.present? && opt.correct?
+          else
+            aa.correct = false
           end
+        when 'text'
+          text = a[:text_answer].to_s.strip
+          aa.text_answer = text
+          accepted = q.options.where(correct: true).pluck(:text)
+          aa.correct = accepted.any? { |acc| acc.to_s.strip.casecmp(text) == 0 }
+        else
+          aa.correct = false
         end
-        attempt.update(score: score)
-        render json: { attempt_id: attempt.id, score: score }
+
+        aa.save!
+
+        if aa.correct
+          score += 1
+        else
+          correct_answers = if q.question_type.to_s == 'text'
+                              q.options.where(correct: true).pluck(:text)
+                            else
+                              q.options.where(correct: true).pluck(:id, :text).map { |id, txt| { id: id, text: txt } }
+                            end
+
+          your_answer = if aa.option.present?
+                         { id: aa.option.id, text: aa.option.text }
+                       else
+                         aa.text_answer
+                       end
+
+          incorrect << {
+            question_id: q.id,
+            prompt: q.prompt,
+            your_answer: your_answer,
+            correct_answers: correct_answers
+          }
+        end
       end
 
-      def show
-        attempt = Attempt.includes(attempt_answers:
-        [:question, :option]).find(params[:id])
-        render json: attempt.as_json(include: { attempt_answers: { include:
-        [:question, :option] } })
-      end
-      
-      private
-      
-      def attempt_params
-        params.require(:attempt).permit(:quiz_id, :taker_name, answers:[:question_id, :option_id, :text_answer])
-      end
+      attempt.update!(score: score)
+
+      render json: {
+        attempt_id: attempt.id,
+        quiz_id: quiz.id,
+        score: score,
+        total_questions: quiz.questions.count,
+        incorrect: incorrect
+      }, status: :created
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "Quiz not found" }, status: :not_found
+    rescue ActiveRecord::RecordInvalid => e
+      render json: { error: e.record.errors.full_messages }, status: :unprocessable_entity
+    end
+
+    def show
+      attempt = Attempt.includes(attempt_answers: [:question, :option]).find(params[:id])
+      render json: attempt.as_json(only: [:id, :quiz_id, :taker_name, :score, :created_at], include: { attempt_answers: { only: [:id, :question_id, :option_id, :text_answer, :correct] } })
+    rescue ActiveRecord::RecordNotFound
+      render json: { error: "Attempt not found" }, status: :not_found
+    end
   end
 end

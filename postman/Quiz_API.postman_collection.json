@@ -1,0 +1,179 @@
+{
+  "info": {
+    "name": "Quiz API",
+    "_postman_id": "d8f3b6c2-quiz-api-0000-0000-000000000000",
+    "description": "Postman collection for the Quiz API: fetch quizzes, submit attempts, and retrieve attempts.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Get All Quizzes",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/quizzes",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "quizzes"
+          ]
+        },
+        "description": "Returns list of quizzes with their questions and options (options do not expose `correct`)."
+      },
+      "response": [
+        {
+          "name": "Example response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/quizzes"
+          },
+          "status": "OK",
+          "code": 200,
+          "_body": "[ { \n  \"id\": 1, \n  \"title\": \"Geography Quiz\", \n  \"description\": \"Basic geography\", \n  \"questions\": [ { \"id\": 10, \"prompt\": \"Capital of France?\", \"question_type\": \"text\", \"options\": [ { \"id\": 101, \"text\": \"Paris\" } ] } ]\n} ]"
+        }
+      ]
+    },
+    {
+      "name": "Get Single Quiz",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/quizzes/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "quizzes",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "1",
+              "description": "Quiz id"
+            }
+          ]
+        },
+        "description": "Get one quiz (questions + options). Replace :id with quiz id."
+      },
+      "response": []
+    },
+    {
+      "name": "Submit Attempt",
+      "request": {
+        "method": "POST",
+        "header": [
+          {
+            "key": "Content-Type",
+            "value": "application/json"
+          }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"quiz_id\": 1,\n  \"taker_name\": \"Alice\",\n  \"answers\": [\n    { \"question_id\": 10, \"option_id\": 21 },\n    { \"question_id\": 11, \"text_answer\": \"Paris\" }\n  ]\n}",
+          "options": {
+            "raw": {
+              "language": "json"
+            }
+          }
+        },
+        "url": {
+          "raw": "{{baseUrl}}/api/attempts",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "attempts"
+          ]
+        },
+        "description": "Submit answers to create an Attempt. Returns score, incorrect list and full per-question breakdown."
+      },
+      "response": [
+        {
+          "name": "Example success response",
+          "originalRequest": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "body": {
+              "mode": "raw",
+              "raw": "{ ... }"
+            },
+            "url": "{{baseUrl}}/api/attempts"
+          },
+          "status": "Created",
+          "code": 201,
+          "_body": "{\n  \"attempt_id\": 5,\n  \"quiz_id\": 1,\n  \"score\": 1,\n  \"total_questions\": 2,\n  \"incorrect\": [ { \"question_id\": 11, \"prompt\": \"Capital of France?\", \"your_answer\": \"Lyon\", \"correct_answers\": [\"Paris\"] } ],\n  \"questions\": [ { \"question_id\": 10, \"prompt\": \"Q1?\", \"your_answer\": { \"id\": 21, \"text\": \"Option A\" }, \"correct\": true, \"correct_answers\": [ { \"id\": 21, \"text\": \"Option A\" } ] } ]\n}"
+        }
+      ]
+    },
+    {
+      "name": "Get Attempt Result",
+      "request": {
+        "method": "GET",
+        "header": [],
+        "url": {
+          "raw": "{{baseUrl}}/api/attempts/:id",
+          "host": [
+            "{{baseUrl}}"
+          ],
+          "path": [
+            "api",
+            "attempts",
+            ":id"
+          ],
+          "variable": [
+            {
+              "key": "id",
+              "value": "5",
+              "description": "Attempt id returned from create"
+            }
+          ]
+        },
+        "description": "Fetch persisted attempt details (answers + correctness)."
+      },
+      "response": [
+        {
+          "name": "Example response",
+          "originalRequest": {
+            "method": "GET",
+            "header": [],
+            "url": "{{baseUrl}}/api/attempts/5"
+          },
+          "status": "OK",
+          "code": 200,
+          "_body": "{ \n  \"id\": 5, \n  \"quiz_id\": 1, \n  \"taker_name\": \"Alice\", \n  \"score\": 1, \n  \"attempt_answers\": [ { \"id\": 33, \"question_id\": 10, \"option_id\": 21, \"text_answer\": null, \"correct\": true } ] \n}"
+        }
+      ]
+    }
+  ],
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "exec": [
+          "// Pre-request script placeholder"
+        ],
+        "type": "text/javascript"
+      }
+    }
+  ],
+  "variable": [
+    {
+      "key": "baseUrl",
+      "value": "http://localhost:3000",
+      "type": "string"
+    }
+  ]
+}
