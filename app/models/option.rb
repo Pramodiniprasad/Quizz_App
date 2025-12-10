@@ -1,4 +1,6 @@
 class Option < ApplicationRecord
   belongs_to :question
-validates :text, presence: true
+  has_many :attempt_answers, dependent: :destroy
+
+  validates :text, presence: true
 end

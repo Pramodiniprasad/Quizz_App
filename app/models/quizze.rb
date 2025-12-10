@@ -5,10 +5,12 @@ class Quizze < ApplicationRecord
   validates :title, presence: true
 
    def self.ransackable_associations(auth_object = nil)
-    ["questions"]
+    ["questions", "attempts"]
   end
   def self.ransackable_attributes(auth_object = nil)
-    ["title", "description", "created_at", "updated_at"]
+    ["title", "description", "created_at", "updated_at", ]
   end
+
+  
 
 end
