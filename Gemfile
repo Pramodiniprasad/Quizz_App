@@ -1,5 +1,8 @@
 source "https://rubygems.org"
 ruby "3.3.3"
+gem "net-smtp"
+gem "net-pop"
+gem "net-imap"
 
 # Bundle edge Rails instead: gem "rails", github: "rails/rails", branch: "main"
 gem "rails", "~> 8.0.4"
