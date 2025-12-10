@@ -1,5 +1,6 @@
 module Api
   class AttemptsController < ApplicationController
+    protect_from_forgery with: :null_session
     def create
       quiz = Quizze.find(params[:quiz_id])
       attempt = Attempt.create!(quizze: quiz, taker_name: params[:taker_name])
@@ -81,3 +82,6 @@ module Api
     end
   end
 end
+
+
+
